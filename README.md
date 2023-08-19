@@ -76,45 +76,11 @@ See the overview of implemented features and TODOs in [PROJECT_PROGRESS.md](./PR
 > Adding more datasets for training and validation is on the project [TODO list](./PROJECT_PROGRESS.md#data).
 
 
-
-
-
-
 ## <a name='Solutionarchitecture'></a>Solution architecture
 ![Alt text](./assets/solution_diagram.png)
 
 ## <a name='Projectorganization'></a>Project organization
 - [ ] ==Generate tree and describe each folder\file==
-```
-+---archive
-+---.git
-|   +---hooks
-|   +---branches
-|   +-- ....
-+---credentials
-+---utilities
-+---environment
-+---tracking
-|   \---mlflow
-+---orchestration
-|   +---server
-|   +---agent
-|   \---gcp_cloud
-+---.vscode
-+---training
-+---deployment
-|   +---google_cloud_run
-|   |   \---artifact
-|   |       +---tensorboard_logs
-|   |       |   +---validation
-|   |       |   \---train
-|   |       \---model
-|   |           \---data
-|   |               \---model
-|   |                   \---variables
-|   \---web_service_local
-\---data
-```
 
 ## <a name='Projectcomponentsandreproducibility'></a>Project components and reproducibility
 
