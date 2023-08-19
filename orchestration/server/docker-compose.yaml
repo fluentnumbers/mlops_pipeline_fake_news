@@ -1,0 +1,58 @@
+version: "3.9"
+services:
+  prefect_db:
+    image: postgres:15.3-alpine
+    restart: always
+    command:
+      - postgres
+      - -c
+      - max_connections=150
+    environment:
+      - POSTGRES_USER=${PREFECT_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${PREFECT_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${PREFECT_POSTGRES_DB}
+      - POSTGRES_PORT=${PREFECT_POSTGRES_PORT}
+    expose:
+      - ${PREFECT_POSTGRES_PORT}
+    volumes:
+      - prefect_db_volume:/var/lib/postgresql/data
+
+  ### Prefect Server API and UI
+  prefect_server:
+    build: .
+    restart: always
+    volumes:
+      - prefect_data:/root/.prefect
+      - prefect_flows:/flows
+    entrypoint: ["prefect", "server", "start"]
+    environment:
+      # If you want to access Prefect Server from anywhere other than the Docker host machine, you will need to change
+      # PREFECT_UI_URL to match the external hostname/IP used to load the UI in your web browser.
+      # PREFECT_UI_URL: http://127.0.0.0:4200/api
+      PREFECT_API_URL: ${PREFECT_API_URL}
+      PREFECT_SERVER_API_HOST: 0.0.0.0
+      PREFECT_SERVER_ANALYTICS_ENABLED: "false"
+      PREFECT_LOGGING_SERVER_LEVEL: WARNING
+      PREFECT_API_DATABASE_CONNECTION_URL: postgresql+asyncpg://${PREFECT_POSTGRES_USER}:${PREFECT_POSTGRES_PASSWORD}@prefect_db:${PREFECT_POSTGRES_PORT}/${PREFECT_POSTGRES_DB}
+    ports:
+      - 4200:4200
+    depends_on:
+      prefect_db:
+        condition: service_started
+
+
+  ## Prefect Agent, optionally, if started from the same docker-compose
+#   agent:
+#     image: prefecthq/prefect:2.10.17-python3.11
+#     restart: always
+#     entrypoint: ["/opt/prefect/entrypoint.sh", "prefect", "agent", "start", "-q", "default"]
+#     environment:
+#       - PREFECT_API_URL=http://prefect_server:4200/api
+# #       Use PREFECT_API_KEY if connecting the agent to Prefect Cloud
+# #     - PREFECT_API_KEY=YOUR_API_KEY
+#     profiles: ["agent"]
+
+volumes:
+  prefect_db_volume:
+  prefect_data:
+  prefect_flows:

@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  adminer:
+    image: michalhosna/adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DRIVER: pgsql
+      ADMINER_AUTOLOGIN: 1
+      ADMINER_DB: ${MONITORING_POSTGRES_DB}
+      ADMINER_PASSWORD: ${MONITORING_POSTGRES_PASSWORD}
+      ADMINER_SERVER: monitoring-db
+      ADMINER_USERNAME: ${MONITORING_POSTGRES_USER}
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana
+    restart: always
+    user: "472"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config/grafana_datasources.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro
+      - ./config/grafana_dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./dashboards:/opt/grafana/dashboards
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    external: true
+    name: web_service_local_monitoring
+
+
+volumes:
+  grafana_data: {}

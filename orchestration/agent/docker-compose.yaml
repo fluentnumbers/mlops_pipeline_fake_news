@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  agent:
+    build: .
+    command: bash -c "prefect agent start --work-queue default"
+    environment:
+      PREFECT_API_URL: ${PREFECT_API_URL}
+    volumes:
+      - /srv/docker/prefect/flows:/root/.prefect/flows
+      - /srv/docker/prefect/flows:/flows

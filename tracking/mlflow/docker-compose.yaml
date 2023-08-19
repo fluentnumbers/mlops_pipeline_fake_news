@@ -1,0 +1,47 @@
+version: "3.9"
+services:
+  mlflow_db:
+    restart: always
+    image: mysql/mysql-server:8.0.32
+    container_name: mlflow_db
+    expose:
+      - ${MLFLOW_DB_PORT}
+    ports:
+        - "${MLFLOW_DB_PORT}:${MLFLOW_DB_PORT}"
+    networks:
+      - mlflow_default
+    environment:
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_USER=${MYSQL_USER}
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+        - mlflow_db_volume:/var/lib/mysql
+
+  web:
+    restart: always
+    build: .
+    image: mlflow_server
+    container_name: mlflow_server
+    networks:
+      - mlflow_default
+    depends_on:
+      - mlflow_db
+    expose:
+      - ${MLFLOW_SERVER_PORT}
+    ports:
+      - "${MLFLOW_SERVER_PORT}:${MLFLOW_SERVER_PORT}"
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.gcp/credentials.json
+      - BACKEND=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mlflow_db:${MLFLOW_DB_PORT}/${MYSQL_DATABASE}
+      # - BACKEND=sqlite://example.db
+    volumes:
+      - ${GCP_CREDENTIALS_PATH}:/root/.gcp/credentials.json
+    command: mlflow server --backend-store-uri $${BACKEND} --default-artifact-root ${MLFLOW_ARTIFACT_LOCATION} --host 0.0.0.0
+
+networks:
+    mlflow_default:
+        driver: bridge
+
+volumes:
+  mlflow_db_volume:

@@ -1,0 +1,79 @@
+version: "3.9"
+services:
+  monitoring-db:
+    image: postgres:15.3-alpine
+    restart: always
+    command:
+      - postgres
+      - -c
+      - max_connections=150
+    environment:
+      POSTGRES_PASSWORD: ${MONITORING_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${MONITORING_POSTGRES_DB}
+      POSTGRES_USER: ${MONITORING_POSTGRES_USER}
+    networks:
+      - monitoring
+    expose:
+      - 5432
+    volumes:
+      - monitoring_db_volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${MONITORING_POSTGRES_DB} -U ${MONITORING_POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  local_deployment:
+    restart: always
+    build: .
+    ports:
+        - ${DEPLOYMENT_WEB_SERVICE_LOCAL_PORT}:${DEPLOYMENT_WEB_SERVICE_LOCAL_PORT}
+    environment:
+        - GOOGLE_APPLICATION_CREDENTIALS=/root/.gcp/credentials.json
+        - MLFLOW_TRACKING_URI=http://host.docker.internal:${MLFLOW_SERVER_PORT}
+        - MODEL_NAME=${MODEL_NAME}
+        - MONITORING_DATABASE_URI=postgresql://${MONITORING_POSTGRES_USER}:${MONITORING_POSTGRES_PASSWORD}@monitoring-db:5432/${MONITORING_POSTGRES_DB}
+    depends_on:
+      monitoring-db:
+        condition: service_started
+    networks:
+      - mlflow_default
+      - monitoring
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${GCP_CREDENTIALS_PATH}:/root/.gcp/credentials.json
+      #/home/fn/portfolio_mlops/deployment/web_service_local/fetch_model.py:/app/fetch_model.py
+      # /home/fn/portfolio_mlops/deployment/web_service_local/classify.py:/app/classify.py
+    command: /bin/sh -c "gcloud auth activate-service-account --key-file /root/.gcp/credentials.json &&
+      python fetch_model.py &&
+      gunicorn --bind=0.0.0.0:${DEPLOYMENT_WEB_SERVICE_LOCAL_PORT} --timeout=600 classify:app"
+
+
+
+  # streamlit_app:
+  #   build:
+  #     context: streamlit_app
+  #     dockerfile: Dockerfile
+  #   image: streamlit_app:latest
+  #   container_name: streamlit_app
+  #   restart: always
+  #   volumes:
+  #     - ./:/home/evidently-fastapi
+  #   environment:
+  #     - FASTAPI_APP_HOST=fastapi_app
+  #   ports:
+  #     - 8501:8501
+  #   networks:
+  #     - monitoring
+
+
+volumes:
+  monitoring_db_volume:
+
+networks:
+  monitoring:
+  mlflow_default:
+    external: true
+    name: mlflow_mlflow_default

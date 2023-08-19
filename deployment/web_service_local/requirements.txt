@@ -1,0 +1,15 @@
+tf-nightly
+mlflow
+numpy
+scikit-learn
+gunicorn
+google-cloud-storage
+python-dotenv
+boto3
+flask
+gcloud
+cryptography
+dill
+fsspec
+psycopg2-binary
+google-api-python-client

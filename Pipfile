@@ -1,0 +1,37 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+kaggle = "*"
+mlflow = "*"
+numpy = "*"
+prefect = "*"
+pandas = "*"
+sklearn = "*"
+nltk = "*"
+google-cloud-storage = "*"
+prefect-gcp = "*"
+python-dotenv = "*"
+optuna = "*"
+tensorflow = "*"
+bs4 = "*"
+optuna-integration = "*"
+evidently = "*"
+psycopg2-binary = "*"
+
+[dev-packages]
+ipykernel = "*"
+pre-commit = "*"
+black = "*"
+isort = "*"
+pytest = "*"
+pylint = "*"
+deepdiff = "*"
+pytest-dotenv = "*"
+requests = "*"
+
+[requires]
+python_version = "3.10"
+python_full_version = "3.10.6"
